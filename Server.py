@@ -2,6 +2,7 @@ import socket
 import threading
 from io import open
 
+
 # VER CURSO SECCION 14 MANEJO DE FICHEROS > 'Ficheros de texto'
 
 USUARIO = 'Pablo'
@@ -14,15 +15,15 @@ ADDR = (SERVER, PORT)
 FORMATO = 'utf-8'
 MENSAJE_DESCONECTADO = "!DESCONECTANDO"
 
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #con esto creamos el espacio de conexion
-server.bind(ADDR)
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #con esto creamos el espacio de conexion y el tipo (SOCK_STREAM)
+server.bind(ADDR) #Vinculamos el socket con la dirección ip y el puerto
+
+
 
 def revisarPermiso(msg):
     espacio = msg.find(' ')
     usuario = msg[0:espacio]
     contra = msg[espacio+1:]
-
-
 
     fichero = open('Autentificación.txt','r')
     texto = fichero.read()
@@ -50,7 +51,7 @@ def manejar_cliente(conn, addr): #esta funcion maneja cada conexion de manera in
     contra = False
 
     while conectado:
-        mensaje_longitud = conn.recv(CABECERA).decode(FORMATO)
+        mensaje_longitud = conn.recv(CABECERA).decode(FORMATO) #La función conn.recv también es bloqueante, por eso es vital usar hilos para no trabar a los demas clientes #esta linea lo que hace es avisarnos el tamaño del mensaje que vamos a recibir
 
         if mensaje_longitud:
             mensaje_longitud = int(mensaje_longitud)
@@ -70,19 +71,17 @@ def manejar_cliente(conn, addr): #esta funcion maneja cada conexion de manera in
                     conectado = False
 
 
-
-
-
     conn.close()
 
 def start(): #Esta funcion maneja conexiones nuevas
     server.listen() #empieza a escuchar para posibles conexiones
     print("[ESCUCHANDO] El server esta escuchando en {}".format(SERVER))
+
     while True:
-        conn, addr = server.accept() #en la variable conn se guarda la informacion del cliente para poder enviarle despues informacion.
+        conn, addr = server.accept() #ADDR guarda la ip y el puerto y CONN es un object de tipo socket que nos permite enviar información despues. La funcion server.accept() es bloqueante, se queda parada ahi hasta que llegue algun cliente
         thread = threading.Thread(target=manejar_cliente, args=(conn, addr))  #cuando una conexion nueva aparece, generamos un thread nuevo enviandoselo a la funcion manejar_cliente con sus respectivos argumentos
         thread.start()
-        print("[CLIENTES CONECTADOS] {} ".format(threading.active_count()-1))
+        print("[CLIENTES CONECTADOS] {} ".format(threading.active_count()-1)) #Se le resta uno porque hay un hilo que esta continuamente ejecutandose, que es el de la función start()
 
 print("[EMPEZANDO] El server esta comenzando...")
 start()
