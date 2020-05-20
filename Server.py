@@ -1,7 +1,8 @@
 import socket
 import threading
 from io import open
-
+from datetime import date
+from datetime import datetime
 
 # VER CURSO SECCION 14 MANEJO DE FICHEROS > 'Ficheros de texto'
 
@@ -19,6 +20,20 @@ server = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #con esto creamos el 
 server.bind(ADDR) #Vinculamos el socket con la dirección ip y el puerto
 
 
+def nuevoRegistro(addr,num):
+    if num == 1:
+        with open("Bitacora.txt","a") as b:
+            now = datetime.now()
+            b.write("El cliente {} se conecto el dia {} a las {} horas...\n".format(addr,now.date(),now.time()))
+            b.close()
+    elif num == 2:
+        with open("Bitacora.txt","a") as b:
+            now = datetime.now()
+            b.write("El cliente {} se desconecto el dia {} a las {} horas...\n".format(addr,now.date(),now.time()))
+            b.close()
+
+
+
 
 def revisarPermiso(msg):
     espacio = msg.find(' ')
@@ -33,10 +48,10 @@ def revisarPermiso(msg):
     usuarioCorrecto = texto[0:registro1]
     contraCorrecta = texto[registro1+1:]
 
-    print("Tamano total del archivo {}".format(len(texto)))
-    print("Espacio posicion: {} \n".format(registro1))
-    print("Usuario: {}  tamano {} \n".format(usuario, len(usuarioCorrecto)))
-    print("Contrasena: {}  tamano {} \n".format(contra, len(contraCorrecta)))
+    #print("Tamano total del archivo {}".format(len(texto)))
+    #print("Espacio posicion: {} \n".format(registro1))
+    #print("Usuario: {}  tamano {} \n".format(usuario, len(usuarioCorrecto)))
+    #print("Contrasena: {}  tamano {} \n".format(contra, len(contraCorrecta)))
 
     if usuario == usuarioCorrecto and contra == contraCorrecta:
         return True
@@ -45,6 +60,7 @@ def revisarPermiso(msg):
 
 def manejar_cliente(conn, addr): #esta funcion maneja cada conexion de manera individual
     print("[NUEVA CONEXION] {} conectado".format(addr))
+    nuevoRegistro(addr,1)
     conectado = True
 
     usuario = False
@@ -59,6 +75,7 @@ def manejar_cliente(conn, addr): #esta funcion maneja cada conexion de manera in
 
             if mensaje == MENSAJE_DESCONECTADO:
                 conectado = False
+                nuevoRegistro(addr, 2)
 
             print("[IP|PUERTO>{}] Dice; {}".format(addr,mensaje))
             conn.send("Mensaje recibido {}".format(mensaje).encode(FORMATO))
@@ -69,6 +86,7 @@ def manejar_cliente(conn, addr): #esta funcion maneja cada conexion de manera in
                 else:
                     conn.send("Rechazado... Desconectandolo".encode(FORMATO))
                     conectado = False
+                    nuevoRegistro(addr, 2)
 
 
     conn.close()
